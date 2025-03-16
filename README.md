@@ -182,7 +182,7 @@ La corrección personal tendrá en cuenta la calidad del código entregado y cas
 
 ## Resolución 
 
-### Ejercicio 1 
+### Ejercicio 1
 
 Se crea al generador ```generar-compose.sh``` que llama internamente a un script en python como 
 
@@ -217,3 +217,53 @@ def generar(self):
 ```
 
 Luego, guarda el archivo con el nombre dado en ```ruta_salida```
+
+### Ejercicio 2
+
+Se agregan los volumenes a cada servicio lo cual permite compartir archivos entre el host y el container.
+En este caso, se comparten los archivos de configuración
+
+```yaml
+client1:
+  volumes:
+  - ./client/config.yaml:/config.yaml
+
+server:
+  volumes:
+    - ./server/config.ini:/config.ini
+```
+
+Para confirmar que al modificar desde el host se ve en el container, primero levantamos los servicios.
+
+```sh
+make docker-compose up
+
+```
+Luego, en el servidor (si está corriendo) ejecutamos shell y confirmamos los valores iniciales 
+
+```sh
+docker compose -f ./docker-compose-dev.yaml exec server sh
+
+# Vemos por primera vez. Por ejemplo, SERVER_PORT=12345
+cat config.ini
+
+# Modificamos desde el host a SERVER_PORT=9999
+cat config.ini
+
+# Deberia haber cambiado
+``` 
+
+Con el cliente, seguramente ya terminó, asi que lo volvemos a levantar pero unicamente corriendo shell.
+
+```sh
+docker compose -f ./docker-compose-dev.yaml run --entrypoint sh client1
+
+# Revisamos la configuración inicial. Por ejemplo: address: "server:12345" 
+cat config.yaml
+
+# Cambiamos en el host a address: "server:99999"
+cat config.yaml
+
+# Deberia haber cambiado
+```
+
