@@ -31,7 +31,9 @@ services:
       - testing_net 
     depends_on:
       - server
-    entrypoint: validar-echo-server.sh
+    entrypoint: sh /validar-echo-server.sh
+    volumes:
+    - ./validar-echo-server.sh:/validar-echo-server.sh
 
 networks:
   testing_net:
