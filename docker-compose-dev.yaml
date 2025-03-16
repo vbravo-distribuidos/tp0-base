@@ -18,16 +18,6 @@ services:
     - testing_net
     volumes:
     - ./client/config.yaml:/config.yaml
-  netcat:
-    container_name: netcat
-    depends_on:
-    - server
-    entrypoint: sh /validar-echo-server.sh
-    image: subfuzion/netcat
-    networks:
-    - testing_net
-    volumes:
-    - ./validar-echo-server.sh:/validar-echo-server.sh
   server:
     container_name: server
     entrypoint: python3 /main.py

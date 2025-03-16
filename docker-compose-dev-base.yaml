@@ -23,18 +23,7 @@ services:
       - server
     volumes:
       - ./client/config.yaml:/config.yaml
-
-  netcat:
-    container_name: netcat
-    image: subfuzion/netcat
-    networks:
-      - testing_net 
-    depends_on:
-      - server
-    entrypoint: sh /validar-echo-server.sh
-    volumes:
-    - ./validar-echo-server.sh:/validar-echo-server.sh
-
+      
 networks:
   testing_net:
     ipam:
