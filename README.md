@@ -178,3 +178,42 @@ Se espera que se redacte una sección del README en donde se indique cómo ejecu
 Se proveen [pruebas automáticas](https://github.com/7574-sistemas-distribuidos/tp0-tests) de caja negra. Se exige que la resolución de los ejercicios pase tales pruebas, o en su defecto que las discrepancias sean justificadas y discutidas con los docentes antes del día de la entrega. El incumplimiento de las pruebas es condición de desaprobación, pero su cumplimiento no es suficiente para la aprobación. Respetar las entradas de log planteadas en los ejercicios, pues son las que se chequean en cada uno de los tests.
 
 La corrección personal tendrá en cuenta la calidad del código entregado y casos de error posibles, se manifiesten o no durante la ejecución del trabajo práctico. Se pide a los alumnos leer atentamente y **tener en cuenta** los criterios de corrección informados  [en el campus](https://campusgrado.fi.uba.ar/mod/page/view.php?id=73393).
+
+
+## Resolución 
+
+### Ejercicio 1 
+
+Se crea al generador ```generar-compose.sh``` que llama internamente a un script en python como 
+
+```bash
+#!/bin/bash
+echo "Nombre del archivo de salida: $1"
+echo "Cantidad de clientes: $2"
+PLANTILLA_BASE="docker-compose-dev-base.yaml"
+python generador.py --ruta_salida $1 --clientes $2 --ruta_plantilla $PLANTILLA_BASE
+```
+
+Donde los parametros ingresados por el usuario son
+- ruta_salida: Es el archivo de salida
+- clientes: Es la cantidad de clientes a generar
+
+Y los dados por el mismo script son
+- plantilla_base: Es la plantilla utilizada como base que usa al archivo docker-compose-dev.yaml original, renombrado a docker-compose-dev-base.yaml
+
+Internamente, copia la configuración de ```client1``` y crea N clientes donde se modifica su ```container_name``` y ```CLI_ID``` asignandole su ID correspondiente.
+
+```python
+def generar_cliente(self, cliente: int):
+    plantilla_cliente = self.plantilla["services"]["client1"]
+    plantilla_nuevo_cliente = copy.deepcopy(plantilla_cliente)
+    plantilla_nuevo_cliente["container_name"] = f"client{cliente}"
+    plantilla_nuevo_cliente["environment"][0] = f"CLI_ID={cliente}"
+    return plantilla_nuevo_cliente
+
+def generar(self):
+    for i in range(1, self.clientes + 1):
+        self.plantilla["services"][f"client{i}"] = self.generar_cliente(i)
+```
+
+Luego, guarda el archivo con el nombre dado en ```ruta_salida```
