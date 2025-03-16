@@ -1,5 +1,5 @@
 docker pull --quiet busybox
-docker run -it --rm --network tp0_testing_net busybox sh -c \
+docker run --rm --network tp0_testing_net busybox sh -c \
 "if echo test | nc server 12345 | grep -q test; then \
     echo 'action: test_echo_server | result: success'; \
  else \
