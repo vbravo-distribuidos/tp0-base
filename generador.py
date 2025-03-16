@@ -23,7 +23,14 @@ class GeneradorDockerCompose:
         return plantilla_nuevo_cliente
 
     def generar(self):
-        for i in range(self.clientes + 1):
+        if self.clientes == 0:
+            self.plantilla["services"].pop("client1")
+            return 
+        
+        if self.clientes == 1:
+            return 
+
+        for i in range(1, self.clientes + 1):
             self.plantilla["services"][f"client{i}"] = self.generar_cliente(i)
 
     def guardar(self):
