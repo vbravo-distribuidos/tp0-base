@@ -269,3 +269,17 @@ cat config.yaml
 
 ### Ejercicio 3
 
+Se crea el archivo ```validar-echo-ser.sh``` como 
+
+```sh
+docker pull --quiet busybox
+docker run --rm --network tp0_testing_net busybox sh -c \
+"if [[ \"\$(echo test | nc server 12345)\" == \"test\" ]] ; then \
+    echo 'action: test_echo_server | result: success'; \
+ else \
+    echo 'action: test_echo_server | result: fail' \
+; fi"
+```
+
+Donde en la primera linea se descarga la imagen busybox que tiene ya instalado netcat.   
+Luego, se instancia la imagen conectandola a la red ```tp0_testing_net``` que usa el servidor y se ejecuta un comando que permite enviar un mensaje de *test* y si el mensaje recibido es el mismo, imprime un mensaje de exito. En caso contrario, uno de error.
