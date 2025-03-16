@@ -267,3 +267,5 @@ cat config.yaml
 # Deberia haber cambiado
 ```
 
+### Ejercicio 3
+
