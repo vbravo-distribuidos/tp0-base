@@ -14,6 +14,7 @@ class Server:
 
     def salir_elegantemente(self, signum, frame):
         self.esta_corriendo = False
+        logging.info(f"action: señal SIGTERM recibida y termina el servidor")
 
     def run(self):
         """
@@ -29,7 +30,7 @@ class Server:
         while self.esta_corriendo:
             client_sock = self.__accept_new_connection()
             self.__handle_client_connection(client_sock)
-            
+
         self._server_socket.close()
 
     def __handle_client_connection(self, client_sock):

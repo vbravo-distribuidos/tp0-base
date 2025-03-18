@@ -50,16 +50,17 @@ func (c *Client) createClientSocket() error {
 		)
 	}
 	c.conn = conn
-	return nil
+	return err
 }
 
 // seguirCorriendo Indica si el cliente deberia seguir ejecutando.
 // Sigue corriendo si el ID del mensaje es menor a la cantidad indicanda en LoopAmount
-// Termina si lo sobrepasó o recibio una señal del tipo SIGTERM
+// Termina si lo sobrepasó, recibio una señal del tipo SIGTERM
+// o hubo un error con la conexion con el server
 func (c *Client) seguirCorriendo(msgID int, sigs chan os.Signal) bool {
 	select {
 	case <-sigs:
-		log.Infof("action: signal_received")
+		log.Infof("action: señal SIGTERM recibida")
 		return false
 	default:
 		return msgID <= c.config.LoopAmount
@@ -75,7 +76,12 @@ func (c *Client) StartClientLoop() {
 
 	for msgID := 1; c.seguirCorriendo(msgID, sigs); msgID++ {
 		// Create the connection the server in every loop iteration. Send an
-		c.createClientSocket()
+		err := c.createClientSocket()
+		if err != nil {
+			break
+		}
+
+		defer c.conn.Close()
 
 		// TODO: Modify the send to avoid short-write
 		fmt.Fprintf(
@@ -84,15 +90,15 @@ func (c *Client) StartClientLoop() {
 			c.config.ID,
 			msgID,
 		)
+
 		msg, err := bufio.NewReader(c.conn).ReadString('\n')
-		c.conn.Close()
 
 		if err != nil {
 			log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
 				c.config.ID,
 				err,
 			)
-			return
+			break
 		}
 
 		log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
