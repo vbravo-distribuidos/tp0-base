@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/op/go-logging"
@@ -50,11 +53,27 @@ func (c *Client) createClientSocket() error {
 	return nil
 }
 
+// seguirCorriendo Indica si el cliente deberia seguir ejecutando.
+// Sigue corriendo si el ID del mensaje es menor a la cantidad indicanda en LoopAmount
+// Termina si lo sobrepasó o recibio una señal del tipo SIGTERM
+func (c *Client) seguirCorriendo(msgID int, sigs chan os.Signal) bool {
+	select {
+	case <-sigs:
+		log.Infof("action: signal_received")
+		return false
+	default:
+		return msgID <= c.config.LoopAmount
+	}
+}
+
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
 	// There is an autoincremental msgID to identify every message sent
 	// Messages if the message amount threshold has not been surpassed
-	for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGTERM)
+
+	for msgID := 1; c.seguirCorriendo(msgID, sigs); msgID++ {
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 
