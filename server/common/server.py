@@ -14,7 +14,7 @@ class Server:
 
     def salir_elegantemente(self, signum, frame):
         self.esta_corriendo = False
-        logging.info(f"action: señal SIGTERM recibida y termina el servidor")
+        logging.info("action: signal_received | result: success")
 
     def run(self):
         """

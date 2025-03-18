@@ -59,7 +59,7 @@ func (c *Client) createClientSocket() error {
 func (c *Client) seguirCorriendo(msgID int, sigs chan os.Signal) bool {
 	select {
 	case <-sigs:
-		log.Infof("action: señal SIGTERM recibida")
+		log.Infof("action: signal_received | result: success")
 		return false
 	default:
 		return msgID <= c.config.LoopAmount
