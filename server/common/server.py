@@ -7,7 +7,7 @@ class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
         self.esta_corriendo = True
-        self.signal(signal.SIGTERM, self.salir_elegantemente)
+        signal.signal(signal.SIGTERM, self.salir_elegantemente)
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(("", port))
         self._server_socket.listen(listen_backlog)
