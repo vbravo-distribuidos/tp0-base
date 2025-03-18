@@ -56,7 +56,6 @@ func (c *Client) createClientSocket() error {
 // seguirCorriendo Indica si el cliente deberia seguir ejecutando.
 // Sigue corriendo si el ID del mensaje es menor a la cantidad indicanda en LoopAmount
 // Termina si lo sobrepasó, recibio una señal del tipo SIGTERM
-// o hubo un error con la conexion con el server
 func (c *Client) seguirCorriendo(msgID int, sigs chan os.Signal) bool {
 	select {
 	case <-sigs:
