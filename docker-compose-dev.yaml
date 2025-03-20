@@ -13,18 +13,11 @@ services:
     entrypoint: /client
     environment:
     - CLI_ID=1
-    image: client:latest
-    networks:
-    - testing_net
-    volumes:
-    - ./client/config.yaml:/config.yaml
-  client2:
-    container_name: client2
-    depends_on:
-    - server
-    entrypoint: /client
-    environment:
-    - CLI_ID=2
+    - NOMBRE=Santiago Lionel
+    - APELLIDO=Lorca
+    - DOCUMENTO=30904465
+    - NACIMIENTO=1999-03-17
+    - NUMERO=7574
     image: client:latest
     networks:
     - testing_net

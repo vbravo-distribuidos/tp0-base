@@ -1,13 +1,10 @@
 package common
 
 import (
-	"bufio"
-	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/op/go-logging"
 )
@@ -18,8 +15,6 @@ var log = logging.MustGetLogger("log")
 type ClientConfig struct {
 	ID            string
 	ServerAddress string
-	LoopAmount    int
-	LoopPeriod    time.Duration
 }
 
 // Client Entity that encapsulates how
@@ -62,52 +57,45 @@ func (c *Client) seguirCorriendo(msgID int, sigs chan os.Signal) bool {
 		log.Infof("action: signal_received | result: success")
 		return false
 	default:
-		return msgID <= c.config.LoopAmount
+		return true
 	}
 }
 
 // StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClientLoop() {
+func (c *Client) StartClientLoop(apuesta *Apuesta) {
 	// There is an autoincremental msgID to identify every message sent
 	// Messages if the message amount threshold has not been surpassed
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM)
 
-	for msgID := 1; c.seguirCorriendo(msgID, sigs); msgID++ {
-		// Create the connection the server in every loop iteration. Send an
-		err := c.createClientSocket()
-		if err != nil {
-			break
-		}
-
-		defer c.conn.Close()
-
-		// TODO: Modify the send to avoid short-write
-		fmt.Fprintf(
-			c.conn,
-			"[CLIENT %v] Message N°%v\n",
-			c.config.ID,
-			msgID,
-		)
-
-		msg, err := bufio.NewReader(c.conn).ReadString('\n')
-
-		if err != nil {
-			log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			break
-		}
-
-		log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
-			c.config.ID,
-			msg,
-		)
-
-		// Wait a time between sending one message and the next one
-		time.Sleep(c.config.LoopPeriod)
-
+	err := c.createClientSocket()
+	if err != nil {
+		return
 	}
+
+	defer c.conn.Close()
+
+	_, err = enviarApuesta(c.conn, apuesta)
+	if err != nil {
+		log.Errorf("action: send_message | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+	}
+
+	respuesta, err := recibirString(c.conn)
+	if err != nil {
+		log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v", c.config.ID, err)
+		return
+	}
+
+	if respuesta == "ok" {
+		log.Infof("action: receive_message | result: sucess | client_id: %v | response: %v", c.config.ID, respuesta)
+	} else {
+		log.Errorf("action: receive_message | result: fail | client_id: %v | response: %v", c.config.ID, respuesta)
+	}
+
+	// Wait a time between sending one message and the next one
+
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
