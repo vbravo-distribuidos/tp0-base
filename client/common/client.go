@@ -82,6 +82,7 @@ func (c *Client) StartClientLoop(apuesta *Apuesta) {
 			err,
 		)
 	}
+	log.Infof("action: send_message | result: success | client_id: %v", c.config.ID)
 
 	respuesta, err := recibirString(c.conn)
 	if err != nil {
