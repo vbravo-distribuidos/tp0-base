@@ -288,7 +288,10 @@ Luego, se instancia la imagen conectandola a la red ```tp0_testing_net``` que us
 
 Para que la salida sea graceful, se captura la señal ```SIGTERM``` tanto en el cliente como el servidor.
 
-En el cliente, creamos un canal que este atento a la señal 
+#### Cliente 
+
+Creamos un canal que este atento a la señal 
+
 ```go
 sigs := make(chan os.Signal, 1)
 signal.Notify(sigs, syscall.SIGTERM)
@@ -321,3 +324,34 @@ Este se encarga de devolver los recursos al sistema ya sea que salgamos de la fu
 ```
 
 Sumandolo al tema de la señal, podemos decir que siempre se liberan correctamente los recursos ya sea que salgamos por exito, error o señal.  
+
+#### Servidor
+
+Python nos provee la biblioteca signal para asignar una función a la señal.     
+Le asignamos el método ```salir_elegantemente()``` 
+
+```python
+class Server:
+    def __init__(self, port, listen_backlog):
+        self.esta_corriendo = True
+        signal.signal(signal.SIGTERM, self.salir_elegantemente)
+```
+Dentro de él, asignamos ```false```  la variable ```esta_corriendo```
+
+```python
+def salir_elegantemente(self, signum, frame):
+    self.esta_corriendo = False 
+```
+
+Esto, nos permite detener el loop de aceptación de clientes.    
+Por último, liberamos el socket del servidor. 
+
+```python
+def run(self):
+    while self.esta_corriendo:
+        client_sock = self.__accept_new_connection()
+        self.__handle_client_connection(client_sock)
+
+    self._server_socket.close() 
+``` 
+
