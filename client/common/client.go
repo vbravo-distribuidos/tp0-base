@@ -97,9 +97,9 @@ func (c *Client) StartClientLoop(apuesta *Apuesta) {
 	}
 
 	if respuesta.esOk() {
-		log.Infof("action: receive_status | result: success | client_id: %v | response: %v", c.config.ID, respuesta.estado)
+		log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v", apuesta.documento, apuesta.numero)
 	} else {
-		log.Errorf("action: receive_status | result: fail | client_id: %v | response: %v", c.config.ID, respuesta.estado)
+		log.Errorf("action: apuesta_enviada | result: fail | client_id: %v | response: %v", c.config.ID, respuesta.estado)
 	}
 
 	// Wait a time between sending one message and the next one
