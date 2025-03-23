@@ -1,6 +1,10 @@
-import socket
 import logging
 import signal
+import socket
+
+from common.protocolo import enviar_respuesta, recibir_apuesta
+from common.respuesta import Respuesta
+from common.utils import store_bets
 
 
 class Server:
@@ -42,13 +46,13 @@ class Server:
         """
         try:
             # TODO: Modify the receive to avoid short-reads
-            msg = client_sock.recv(1024).rstrip().decode("utf-8")
-            addr = client_sock.getpeername()
+            apuesta = recibir_apuesta(client_sock)
+            store_bets([apuesta])
             logging.info(
-                f"action: receive_message | result: success | ip: {addr[0]} | msg: {msg}"
+                f"action: apuesta_almacenada | result: success | dni: {apuesta.document} | numero: {apuesta.number}"
             )
-            # TODO: Modify the send to avoid short-writes
-            client_sock.send("{}\n".format(msg).encode("utf-8"))
+            respuesta = Respuesta("OK")
+            enviar_respuesta(client_sock, respuesta)
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:

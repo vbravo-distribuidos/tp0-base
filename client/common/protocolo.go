@@ -5,41 +5,7 @@ import (
 	"net"
 )
 
-func enviarBytes(conn net.Conn, msg []byte) (int, error) {
-	largo := len(msg)
-	bytes_enviados := 0
-
-	for bytes_enviados < largo {
-		n, err := conn.Write(msg[bytes_enviados:])
-		bytes_enviados += n
-		if err != nil {
-			return bytes_enviados, err
-		}
-	}
-
-	return bytes_enviados, nil
-}
-
-func enviarEnteroU32(conn net.Conn, entero uint32) (int, error) {
-	bytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(bytes, entero)
-	return enviarBytes(conn, bytes)
-}
-
-func enviarString(conn net.Conn, texto string) (int, error) {
-	bytes := []byte(texto)
-	n, err := enviarEnteroU32(conn, uint32(len(bytes)))
-	if err != nil {
-		return n, err
-	}
-
-	return enviarBytes(conn, bytes)
-}
-
-func enviarApuesta(conn net.Conn, apuesta *Apuesta) (int, error) {
-	texto := apuestaAString(apuesta)
-	return enviarString(conn, texto)
-}
+const TAMANIO_UINT32 = 4
 
 func recibirBytes(conn net.Conn, largo uint32) ([]byte, error) {
 	bytes := make([]byte, largo)
@@ -57,7 +23,7 @@ func recibirBytes(conn net.Conn, largo uint32) ([]byte, error) {
 }
 
 func recibirEnteroU32(conn net.Conn) (uint32, error) {
-	bytes, err := recibirBytes(conn, 4)
+	bytes, err := recibirBytes(conn, TAMANIO_UINT32)
 	if err != nil {
 		return 0, err
 	}
@@ -76,4 +42,49 @@ func recibirString(conn net.Conn) (string, error) {
 	}
 
 	return string(bytes), nil
+}
+
+func recibirRespuesta(conn net.Conn) (*Respuesta, error) {
+	texto, err := recibirString(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	return respuestaDesdeString(texto), nil
+}
+
+func enviarBytes(conn net.Conn, msg []byte) (int, error) {
+	largo := len(msg)
+	bytes_enviados := 0
+
+	for bytes_enviados < largo {
+		n, err := conn.Write(msg[bytes_enviados:])
+		bytes_enviados += n
+		if err != nil {
+			return bytes_enviados, err
+		}
+	}
+
+	return bytes_enviados, nil
+}
+
+func enviarEnteroU32(conn net.Conn, entero uint32) (int, error) {
+	bytes := make([]byte, TAMANIO_UINT32)
+	binary.BigEndian.PutUint32(bytes, entero)
+	return enviarBytes(conn, bytes)
+}
+
+func enviarString(conn net.Conn, texto string) (int, error) {
+	bytes := []byte(texto)
+	n, err := enviarEnteroU32(conn, uint32(len(bytes)))
+	if err != nil {
+		return n, err
+	}
+
+	return enviarBytes(conn, bytes)
+}
+
+func enviarApuesta(conn net.Conn, apuesta *Apuesta) (int, error) {
+	texto := apuestaAString(apuesta)
+	return enviarString(conn, texto)
 }

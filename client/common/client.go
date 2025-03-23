@@ -51,7 +51,7 @@ func (c *Client) createClientSocket() error {
 // seguirCorriendo Indica si el cliente deberia seguir ejecutando.
 // Sigue corriendo si el ID del mensaje es menor a la cantidad indicanda en LoopAmount
 // Termina si lo sobrepasó, recibio una señal del tipo SIGTERM
-func (c *Client) seguirCorriendo(msgID int, sigs chan os.Signal) bool {
+func (c *Client) seguirCorriendo(sigs chan os.Signal) bool {
 	select {
 	case <-sigs:
 		log.Infof("action: signal_received | result: success")
@@ -68,6 +68,10 @@ func (c *Client) StartClientLoop(apuesta *Apuesta) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM)
 
+	if !c.seguirCorriendo(sigs) {
+		return
+	}
+
 	err := c.createClientSocket()
 	if err != nil {
 		return
@@ -75,22 +79,24 @@ func (c *Client) StartClientLoop(apuesta *Apuesta) {
 
 	defer c.conn.Close()
 
+	log.Infof("action: sending_bet | result: in_progress | bet: %s", apuestaAString(apuesta))
 	_, err = enviarApuesta(c.conn, apuesta)
 	if err != nil {
 		log.Errorf("action: send_message | result: fail | client_id: %v | error: %v",
 			c.config.ID,
 			err,
 		)
+		return
 	}
 	log.Infof("action: send_message | result: success | client_id: %v", c.config.ID)
 
-	respuesta, err := recibirString(c.conn)
+	respuesta, err := recibirRespuesta(c.conn)
 	if err != nil {
 		log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v", c.config.ID, err)
 		return
 	}
 
-	if respuesta == "ok" {
+	if respuesta.esOk() {
 		log.Infof("action: receive_message | result: sucess | client_id: %v | response: %v", c.config.ID, respuesta)
 	} else {
 		log.Errorf("action: receive_message | result: fail | client_id: %v | response: %v", c.config.ID, respuesta)
