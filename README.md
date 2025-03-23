@@ -283,3 +283,41 @@ docker run --rm --network tp0_testing_net busybox sh -c \
 
 Donde en la primera linea se descarga la imagen busybox que tiene ya instalado netcat.   
 Luego, se instancia la imagen conectandola a la red ```tp0_testing_net``` que usa el servidor y se ejecuta un comando que permite enviar un mensaje de *test* y si el mensaje recibido es el mismo, imprime un mensaje de exito. En caso contrario, uno de error.
+
+### Ejercicio 4
+
+Para que la salida sea graceful, se captura la señal ```SIGTERM``` tanto en el cliente como el servidor.
+
+En el cliente, creamos un canal que este atento a la señal 
+```go
+sigs := make(chan os.Signal, 1)
+signal.Notify(sigs, syscall.SIGTERM)
+```
+
+Y luego, verificamos mediante ```select``` si se encuentra en él al inicio de cada iteración.  
+De estar, devolvemos ```false``` en la funcion seguirCorriendo() y terminamos de enviar mensajes.
+Si no, verifica la condición de cantidad IDs.
+
+```go
+func (c *Client) seguirCorriendo(msgID int, sigs chan os.Signal) bool {
+	select {
+	case <-sigs:
+		log.Infof("action: signal_received | result: success")
+		return false
+	default:
+		return msgID <= c.config.LoopAmount
+	}
+}
+``` 
+
+Respecto al uso de recursos, tenemos a un socket que liberamos con ```defer```.    
+Este se encarga de devolver los recursos al sistema ya sea que salgamos de la función por exito o por un error.
+
+```go
+	for msgID := 1; c.seguirCorriendo(msgID, sigs); msgID++ {
+		err := c.createClientSocket()
+		...
+		defer c.conn.Close() 
+```
+
+Sumandolo al tema de la señal, podemos decir que siempre se liberan correctamente los recursos ya sea que salgamos por exito, error o señal.  
