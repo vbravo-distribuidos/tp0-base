@@ -355,3 +355,51 @@ def run(self):
     self._server_socket.close() 
 ``` 
 
+### Ejercicio 5
+
+Para poder transmitir las apuestas entre el cliente y el servidor necesitamos establecer un protocolo y serialización de mensajes    
+
+
+Los paquetes son longitud variable donde el encabezado contiene el largo del mismo.
+
+```
+--------------------------------
+| LONGITUD | MENSAJE           |
+--------------------------------
+
+```
+- Longitud: Entero de 4 bytes en orden bigendian
+- Mensaje: Bytes
+
+Sobre las entidades compartidas tenemos: Apuestas y Respuestas.
+Ambas se serializan en un string en codificación utf-8 separando sus campos por coma y forman el mensaje del paquete.
+
+Ejemplo de serialización de una apuesta:
+1. Se representan como un string con sus campos separados por coma siguiendo el orden AGENCIA, NOMBRE, APELLIDO, DOCUMENTO, NACIMIENTO y NUMERO
+  Ejemplo: Dada la apuesta `AGENCIA=1`, `NOMBRE=Santiago Lionel`, `APELLIDO=Lorca`, `DOCUMENTO=30904465`, `NACIMIENTO=1999-03-17` y `NUMERO=7574`, la representamos en un string como `1,Santiago Lionel,Lorca,30904465,1999-03-17,7574` 
+2. Guardamos el string en binario con codificación `utf-8`
+
+
+Ejemplo de una respuesta
+1. Sea la respuesta con estado OK
+2. El string resultante es simplemente `OK` en utf-8
+
+A nivel de código, la separación entre el protocolo y la comunicación se da creando dos archivos 
+1. `common/protocolo.py`: Contiene las funciones necesarias para enviar mensajes mediante sockets TCP. Tambíen se hacen cargo de evitar short read/writes confirmando que el mensaje coincida con el largo esperado indicando en el header.  
+2. `common/serializacion.py`: Contiene funciones que permiten transformar las entidades (apuestas y respuestas) en cadenas de texto
+
+Finalmente, a nivel de orden de mensajes, el envio de apuestas se realiza con el siguiente orden
+
+Cliente
+1. El cliente envia la apuesta al servidor
+2. El cliente espera la respuesta de la apuesta que puede ser estado OK o Error
+3. Finaliza
+
+Servidor (Una vez aceptado un cliente)
+1. Recibe una apuesta
+2. La almacena
+3. Respuesta con OK
+4. Cierra la conexión con el cliente
+
+
+![alt text](imgs/ej5.drawio.png)
