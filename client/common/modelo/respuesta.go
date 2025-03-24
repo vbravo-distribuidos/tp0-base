@@ -1,16 +1,16 @@
-package common
+package modelo
 
 type Respuesta struct {
-	estado string
+	Estado string
 }
 
 func NewRespuesta(estado string) *Respuesta {
 	respuesta := &Respuesta{
-		estado: estado,
+		Estado: estado,
 	}
 	return respuesta
 }
 
-func (r *Respuesta) esOk() bool {
-	return r.estado == "OK"
+func (r *Respuesta) EsOk() bool {
+	return r.Estado == "OK"
 }
