@@ -1,4 +1,4 @@
-package common
+package protocolo
 
 import (
 	"encoding/binary"
@@ -44,15 +44,6 @@ func recibirString(conn net.Conn) (string, error) {
 	return string(bytes), nil
 }
 
-func recibirRespuesta(conn net.Conn) (*Respuesta, error) {
-	texto, err := recibirString(conn)
-	if err != nil {
-		return nil, err
-	}
-
-	return respuestaDesdeString(texto), nil
-}
-
 func enviarBytes(conn net.Conn, msg []byte) (int, error) {
 	largo := len(msg)
 	bytes_enviados := 0
@@ -82,9 +73,4 @@ func enviarString(conn net.Conn, texto string) (int, error) {
 	}
 
 	return enviarBytes(conn, bytes)
-}
-
-func enviarApuesta(conn net.Conn, apuesta *Apuesta) (int, error) {
-	texto := apuestaAString(apuesta)
-	return enviarString(conn, texto)
 }

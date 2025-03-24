@@ -6,3 +6,5 @@ bin/
 
 .venv
 .qodo
+
+.data/dataset/

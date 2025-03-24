@@ -1,11 +1,14 @@
 package common
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/protocolo"
+	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/serializacion"
 	"github.com/op/go-logging"
 )
 
@@ -13,8 +16,9 @@ var log = logging.MustGetLogger("log")
 
 // ClientConfig Configuration used by the client
 type ClientConfig struct {
-	ID            string
-	ServerAddress string
+	ID             int
+	ServerAddress  string
+	BatchMaxAmount int
 }
 
 // Client Entity that encapsulates how
@@ -62,7 +66,7 @@ func (c *Client) seguirCorriendo(sigs chan os.Signal) bool {
 }
 
 // StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClientLoop(apuesta *Apuesta) {
+func (c *Client) StartClientLoop() {
 	// There is an autoincremental msgID to identify every message sent
 	// Messages if the message amount threshold has not been surpassed
 	sigs := make(chan os.Signal, 1)
@@ -77,32 +81,60 @@ func (c *Client) StartClientLoop(apuesta *Apuesta) {
 		return
 	}
 
-	defer c.conn.Close()
-
-	log.Infof("action: sending_bet | result: in_progress | bet: %s", apuestaAString(apuesta))
-	_, err = enviarApuesta(c.conn, apuesta)
+	nombreArchivo := fmt.Sprintf("apuestas_%d.txt", c.config.ID)
+	lectorApuestas, err := serializacion.NewLectorApuestas(nombreArchivo, c.config.ID, c.config.BatchMaxAmount)
 	if err != nil {
-		log.Errorf("action: send_message | result: fail | client_id: %v | error: %v",
+		log.Criticalf(
+			"action: create_bet_reader | result: fail | client_id: %v | error: %v",
 			c.config.ID,
 			err,
 		)
 		return
 	}
-	log.Infof("action: send_message | result: success | client_id: %v", c.config.ID)
 
-	respuesta, err := recibirRespuesta(c.conn)
-	if err != nil {
-		log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v", c.config.ID, err)
-		return
+	defer c.conn.Close()
+	defer lectorApuestas.Cerrar()
+
+	for c.seguirCorriendo(sigs) {
+		apuestas := lectorApuestas.Leer()
+		if len(apuestas) == 0 {
+			break
+		}
+
+		_, err := protocolo.EnviarApuestas(c.conn, apuestas)
+		if err != nil {
+			log.Warningf(
+				"action: send_bets | result: fail | client_id: %v | error: %v",
+				c.config.ID,
+				err,
+			)
+			break
+		}
+
+		respuesta, err := protocolo.RecibirRespuesta(c.conn)
+		if err != nil {
+			log.Warningf(
+				"action: receive_response | result: fail | client_id: %v | error: %v",
+				c.config.ID,
+				err,
+			)
+			break
+		}
+		if respuesta.EsOk() {
+			log.Infof(
+				"action: receive_response | result: success | client_id: %v | response: %v",
+				c.config.ID,
+				respuesta,
+			)
+		} else {
+			log.Warningf(
+				"action: receive_response | result: fail | client_id: %v | response: %v",
+				c.config.ID,
+				respuesta,
+			)
+		}
+
 	}
-
-	if respuesta.esOk() {
-		log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v", apuesta.documento, apuesta.numero)
-	} else {
-		log.Errorf("action: apuesta_enviada | result: fail | client_id: %v | response: %v", c.config.ID, respuesta.estado)
-	}
-
-	// Wait a time between sending one message and the next one
 
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
