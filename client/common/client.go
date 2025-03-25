@@ -78,7 +78,7 @@ func (c *Client) StartClientLoop() {
 		return
 	}
 
-	nombreArchivo := fmt.Sprintf("agency-%s.csv", c.config.ID)
+	nombreArchivo := fmt.Sprintf(".data/agency-%s.csv", c.config.ID)
 	lectorApuestas, err := serializacion.NewLectorApuestas(nombreArchivo, c.config.ID, c.config.BatchMaxAmount)
 	if err != nil {
 		log.Criticalf(
