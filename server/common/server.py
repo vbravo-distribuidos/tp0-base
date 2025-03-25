@@ -36,9 +36,9 @@ class Server:
                 self.__handle_client_connection(client_sock)
         except OSError as e:
             if self.senial_sigterm_recibida:
-                logging.info("action: exit | result: success | exit by sigterm")
+                logging.info("action: finish | result: success | finish by sigterm")
             else:
-                logging.error(f"action: exit | result: fail | error: {e}")
+                logging.error(f"action: finish | result: fail | error: {e}")
 
     def __handle_client_connection(self, client_sock):
         """
