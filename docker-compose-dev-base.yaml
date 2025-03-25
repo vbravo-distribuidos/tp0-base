@@ -24,8 +24,8 @@ services:
     volumes:
       - ./client/config.yaml:/config.yaml
       - type: bind 
-        source: ./.data/dataset/agency-1.csv
-        target: /agency-1.csv
+        source: ./.data/
+        target: /.data/
       
 networks:
   testing_net:

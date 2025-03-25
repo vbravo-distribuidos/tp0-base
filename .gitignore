@@ -7,4 +7,4 @@ bin/
 .venv
 .qodo
 
-.data/dataset/
+.data/agency*
