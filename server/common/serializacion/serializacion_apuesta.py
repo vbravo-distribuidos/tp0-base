@@ -21,3 +21,22 @@ def apuestas_desde_string(apuestas_str: str) -> tuple[List[Bet], int]:
         except ValueError:
             cantidad_errores += 1
     return apuestas, cantidad_errores
+
+
+def apuesta_a_string(apuesta: Bet) -> str:
+    campos = [
+        str(apuesta.agency),
+        apuesta.first_name,
+        apuesta.last_name,
+        apuesta.document,
+        str(apuesta.birthdate),
+        str(apuesta.number),
+    ]
+    return DELIMITADOR_COLUMNA.join(campos) 
+
+def apuestas_a_string(apuestas: List[Bet]) -> str:
+    apuestas_str = []
+    for apuesta in apuestas:
+        apuesta_str = apuesta_a_string(apuesta)
+        apuestas_str.append(apuesta_str)
+    return DELIMITADOR_FILA.join(apuestas_str)

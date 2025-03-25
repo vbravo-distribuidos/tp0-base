@@ -27,3 +27,25 @@ func ApuestasAString(apuestas []*modelo.Apuesta) string {
 	}
 	return strings.Join(textos, DELIMITADOR_FILAS)
 }
+
+func ApuestaDesdeString(texto string) *modelo.Apuesta {
+	campos := strings.Split(texto, DELIMITADOR_COLUMNAS)
+	agencia := campos[0]
+	ticket := modelo.NewTicket(campos[1], campos[2], campos[3], campos[4], campos[5])
+	apuesta := modelo.NewApuesta(agencia, ticket)
+	return apuesta
+}
+
+func ApuestasDesdeString(texto string) []*modelo.Apuesta {
+	var apuestas []*modelo.Apuesta
+
+	if texto == "" {
+		return apuestas
+	}
+
+	for _, linea := range strings.Split(texto, DELIMITADOR_FILAS) {
+		apuesta := ApuestaDesdeString(linea)
+		apuestas = append(apuestas, apuesta)
+	}
+	return apuestas
+}

@@ -145,5 +145,18 @@ func (c *Client) StartClientLoop() {
 
 	}
 
+	_, err = protocolo.EnviarAgencia(c.conn, c.config.ID)
+	if err != nil {
+		log.Criticalf("action: envio_consulta_ganadores | result: fail | error: %v", err)
+	}
+
+	apuestasGanadoras, err := protocolo.RecibirApuestas(c.conn)
+	if err != nil {
+		log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
+		return
+	}
+
+	log.Infof("action: consulta_ganadores | result: success | cantidad_ganadores: %v", len(apuestasGanadoras))
+
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }

@@ -1,11 +1,14 @@
 import logging
 import signal
 import socket
+from typing import Dict, List, Set
 
 from common.modelo.respuesta import Respuesta
-from common.utils import store_bets
-from common.protocolo.protocolo_apuesta import recibir_apuestas
+from common.utils import Bet, has_won, load_bets, store_bets
+from common.protocolo.protocolo_apuesta import enviar_apuestas, recibir_apuestas
 from common.protocolo.protocolo_respuesta import enviar_respuesta
+from common.protocolo.protocolo_agencia import recibir_agencia
+from common.serializacion.serializacion_apuesta import apuestas_a_string
 
 
 class Server:
@@ -30,49 +33,42 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
+        cantidad_agencias = 5
+
         try:
-            while True:
-                client_sock = self.__accept_new_connection()
-                self.__handle_client_connection(client_sock)
+            socket_agencias = self.aceptar_agencias(cantidad_agencias)
+            self.almacenar_apuestas_agencias(socket_agencias)
+            self.declarar_ganadores(socket_agencias)
         except OSError as e:
             if self.senial_sigterm_recibida:
                 logging.info("action: finish | result: success | finish by sigterm")
             else:
                 logging.error(f"action: finish | result: fail | error: {e}")
 
-    def __handle_client_connection(self, client_sock):
-        """
-        Read message from a specific client socket and closes the socket
+    def almacenar_apuestas_agencias(self, socket_agencias: List[socket.socket]):
+        for socket_agencia in socket_agencias:
+            self.almacenar_apuestas(socket_agencia)
 
-        If a problem arises in the communication with the client, the
-        client socket will also be closed
-        """
+    def almacenar_apuestas(self, client_sock: socket.socket):
+        while True:
+            apuestas, cantidad_errores = recibir_apuestas(client_sock)
+            if len(apuestas) == 0:
+                logging.info("action: bet length is zero | result: success")
+                break
 
-        try:
-            while True:
-                apuestas, cantidad_errores = recibir_apuestas(client_sock)
-                if len(apuestas) == 0:
-                    logging.info("action: bet length is zero | result: success")
-                    break
-                store_bets(apuestas)
+            store_bets(apuestas)
 
-                if cantidad_errores == 0:
-                    respuesta = Respuesta("OK")
-                    logging.info(
-                        f"action: apuesta_recibida | result: success | cantidad: {len(apuestas)}"
-                    )
-                else:
-                    respuesta = Respuesta("ERROR")
-                    logging.warning(
-                        f"action: apuesta_recibida | result: fail | cantidad: {len(apuestas)}"
-                    )
+            if cantidad_errores == 0:
                 respuesta = Respuesta("OK")
-                enviar_respuesta(client_sock, respuesta)
-        except OSError as e:
-            logging.error("action: receive_message | result: fail | error: {e}")
-        finally:
-            client_sock.close()
-        logging.info("action: close_connection | result: success")
+                logging.info(
+                    f"action: apuesta_recibida | result: success | cantidad: {len(apuestas)}"
+                )
+            else:
+                respuesta = Respuesta("ERROR")
+                logging.warning(
+                    f"action: apuesta_recibida | result: fail | cantidad: {len(apuestas)}"
+                )
+            enviar_respuesta(client_sock, respuesta)
 
     def __accept_new_connection(self):
         """
@@ -87,3 +83,31 @@ class Server:
         c, addr = self._server_socket.accept()
         logging.info(f"action: accept_connections | result: success | ip: {addr[0]}")
         return c
+
+    def aceptar_agencias(self, cantidad_agencias: int) -> List[socket.socket]:
+        socket_agencias = []
+        for _ in range(cantidad_agencias):
+            client_sock = self.__accept_new_connection()
+            socket_agencias.append(client_sock)
+        return socket_agencias
+
+    def filtrar_ganadores(self, agencia: int, apuestas: List[Bet]) -> List[Bet]:
+        return [
+            apuesta
+            for apuesta in apuestas
+            if apuesta.agency == agencia and has_won(apuesta)
+        ]
+
+    def declarar_ganadores(self, socket_agencias: List[socket.socket]):
+        for socket in socket_agencias:
+            apuestas = load_bets()
+            agencia = recibir_agencia(socket)
+            logging.info(
+                f"action: recibir_agencias | result: success | agencia: {agencia}"
+            )
+            ganadores = self.filtrar_ganadores(agencia, apuestas)
+            logging.info(f"action: ganadores | result: success | ganadoras: {apuestas_a_string(ganadores)}")
+            enviar_apuestas(socket, ganadores)
+            logging.info(
+                f"action: apuestas_enviadas | result: success | apuestas: {len(ganadores)}"
+            )
