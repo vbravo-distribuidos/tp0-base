@@ -28,7 +28,7 @@ func NewLectorApuestas(ruta string, agencia string, cantidadMaxima int) (*Lector
 func (l *LectorApuestas) Leer() []*modelo.Apuesta {
 	var apuestas []*modelo.Apuesta
 	i := 0
-	for l.scanner.Scan() && i < l.cantidadMaxima {
+	for i < l.cantidadMaxima && l.scanner.Scan() {
 		linea := l.scanner.Text()
 		ticket := TicketDesdeString(linea)
 		apuesta := modelo.NewApuesta(l.agencia, ticket)
