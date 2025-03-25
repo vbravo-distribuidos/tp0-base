@@ -10,11 +10,11 @@ import (
 type LectorApuestas struct {
 	archivo        *os.File
 	scanner        *bufio.Scanner
-	agencia        int
+	agencia        string
 	cantidadMaxima int
 }
 
-func NewLectorApuestas(ruta string, agencia int, cantidadMaxima int) (*LectorApuestas, error) {
+func NewLectorApuestas(ruta string, agencia string, cantidadMaxima int) (*LectorApuestas, error) {
 	file, err := os.Open(ruta)
 	if err != nil {
 		return nil, err

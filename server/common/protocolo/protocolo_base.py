@@ -1,9 +1,5 @@
 import socket
 
-from common.respuesta import Respuesta
-from common.serializacion import apuesta_desde_string, respuesta_a_string
-from common.utils import Bet
-
 TAMANIO_UINT32 = 4
 TAMANIO_BUFFER = 1024
 ORDEN_BYTES = "big"
@@ -31,11 +27,6 @@ def recibir_string(socket: socket.socket) -> str:
     return bytes_recibidos.decode(CODIFICACION)
 
 
-def recibir_apuesta(socket: socket.socket) -> Bet:
-    apuesta_str = recibir_string(socket)
-    return apuesta_desde_string(apuesta_str)
-
-
 def enviar_bytes(socket: socket.socket, datos: bytes) -> int:
     cantidad_enviada = 0
     while cantidad_enviada < len(datos):
@@ -51,8 +42,3 @@ def enviar_string(socket: socket.socket, mensaje: str) -> int:
     mensaje_codificado = mensaje.encode(CODIFICACION)
     enviar_uint32(socket, len(mensaje_codificado))
     return enviar_bytes(socket, mensaje_codificado)
-
-
-def enviar_respuesta(socket: socket.socket, respuesta: Respuesta) -> int:
-    respuesta_str = respuesta_a_string(respuesta)
-    return enviar_string(socket, respuesta_str)

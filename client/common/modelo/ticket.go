@@ -5,10 +5,10 @@ type Ticket struct {
 	Apellido   string
 	Documento  string
 	Nacimiento string
-	Numero     int
+	Numero     string
 }
 
-func NewTicket(nombre string, apellido string, documento string, nacimiento string, numero int) *Ticket {
+func NewTicket(nombre string, apellido string, documento string, nacimiento string, numero string) *Ticket {
 	apuesta := &Ticket{
 		Nombre:     nombre,
 		Apellido:   apellido,

@@ -19,7 +19,7 @@ services:
     volumes:
     - ./client/config.yaml:/config.yaml
     - source: ./.data/dataset/agency-1.csv
-      target: ./agency-1.csv
+      target: /agency-1.csv
       type: bind
   server:
     container_name: server

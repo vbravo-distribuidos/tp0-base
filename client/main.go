@@ -102,7 +102,7 @@ func main() {
 
 	clientConfig := common.ClientConfig{
 		ServerAddress:  v.GetString("server.address"),
-		ID:             v.GetInt("id"),
+		ID:             v.GetString("id"),
 		BatchMaxAmount: v.GetInt("batch.maxAmount"),
 	}
 

@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/modelo"
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/protocolo"
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/serializacion"
 	"github.com/op/go-logging"
@@ -16,7 +17,7 @@ var log = logging.MustGetLogger("log")
 
 // ClientConfig Configuration used by the client
 type ClientConfig struct {
-	ID             int
+	ID             string
 	ServerAddress  string
 	BatchMaxAmount int
 }
@@ -72,16 +73,12 @@ func (c *Client) StartClientLoop() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM)
 
-	if !c.seguirCorriendo(sigs) {
-		return
-	}
-
 	err := c.createClientSocket()
 	if err != nil {
 		return
 	}
 
-	nombreArchivo := fmt.Sprintf("apuestas_%d.txt", c.config.ID)
+	nombreArchivo := fmt.Sprintf("agency-%s.csv", c.config.ID)
 	lectorApuestas, err := serializacion.NewLectorApuestas(nombreArchivo, c.config.ID, c.config.BatchMaxAmount)
 	if err != nil {
 		log.Criticalf(
@@ -95,11 +92,15 @@ func (c *Client) StartClientLoop() {
 	defer c.conn.Close()
 	defer lectorApuestas.Cerrar()
 
-	for c.seguirCorriendo(sigs) {
-		apuestas := lectorApuestas.Leer()
-		if len(apuestas) == 0 {
+	for {
+		if !c.seguirCorriendo(sigs) {
+			listaVacia := make([]*modelo.Apuesta, 0)
+			protocolo.EnviarApuestas(c.conn, listaVacia)
 			break
+
 		}
+
+		apuestas := lectorApuestas.Leer()
 
 		_, err := protocolo.EnviarApuestas(c.conn, apuestas)
 		if err != nil {
@@ -107,6 +108,14 @@ func (c *Client) StartClientLoop() {
 				"action: send_bets | result: fail | client_id: %v | error: %v",
 				c.config.ID,
 				err,
+			)
+			break
+		}
+
+		if len(apuestas) == 0 {
+			log.Infof(
+				"action: send_bets | result: success | client_id: %v | message: no_bets",
+				c.config.ID,
 			)
 			break
 		}
@@ -122,15 +131,15 @@ func (c *Client) StartClientLoop() {
 		}
 		if respuesta.EsOk() {
 			log.Infof(
-				"action: receive_response | result: success | client_id: %v | response: %v",
+				"action: receive_response | result: success | client_id: %v | response: %+v",
 				c.config.ID,
-				respuesta,
+				respuesta.Estado,
 			)
 		} else {
 			log.Warningf(
-				"action: receive_response | result: fail | client_id: %v | response: %v",
+				"action: receive_response | result: fail | client_id: %v | response: %+v",
 				c.config.ID,
-				respuesta,
+				respuesta.Estado,
 			)
 		}
 

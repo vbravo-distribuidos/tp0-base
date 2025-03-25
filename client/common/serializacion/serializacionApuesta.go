@@ -9,7 +9,7 @@ import (
 
 func ApuestaAString(apuesta *modelo.Apuesta) string {
 	texto := fmt.Sprintf(
-		"%d,%s,%s,%s,%s,%d",
+		"%s,%s,%s,%s,%s,%s",
 		apuesta.Agencia,
 		apuesta.Ticket.Nombre,
 		apuesta.Ticket.Apellido,
@@ -25,13 +25,5 @@ func ApuestasAString(apuestas []*modelo.Apuesta) string {
 	for _, apuesta := range apuestas {
 		textos = append(textos, ApuestaAString(apuesta))
 	}
-	return strings.Join(textos, "\n")
-}
-
-func ApuestaDesdeString(texto string) *modelo.Apuesta {
-	var nombre, apellido, documento, nacimiento string
-	var agencia, numero int
-	fmt.Sscanf(texto, "%d,%s,%s,%s,%s,%d", &agencia, &nombre, &apellido, &documento, &nacimiento, &numero)
-	Ticket := modelo.NewTicket(nombre, apellido, documento, nacimiento, numero)
-	return modelo.NewApuesta(agencia, Ticket)
+	return strings.Join(textos, DELIMITADOR_FILAS)
 }

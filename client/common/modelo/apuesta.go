@@ -1,11 +1,11 @@
 package modelo
 
 type Apuesta struct {
-	Agencia int
+	Agencia string
 	Ticket  *Ticket
 }
 
-func NewApuesta(agencia int, Ticket *Ticket) *Apuesta {
+func NewApuesta(agencia string, Ticket *Ticket) *Apuesta {
 	apuesta := &Apuesta{
 		Agencia: agencia,
 		Ticket:  Ticket,
