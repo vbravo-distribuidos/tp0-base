@@ -1,14 +1,15 @@
 import logging
 import signal
 import socket
-from typing import Dict, List, Set
+from typing import List
 
 from common.modelo.respuesta import Respuesta
-from common.utils import Bet, has_won, load_bets, store_bets
-from common.protocolo.protocolo_apuesta import enviar_apuestas, recibir_apuestas
-from common.protocolo.protocolo_respuesta import enviar_respuesta
 from common.protocolo.protocolo_agencia import recibir_agencia
+from common.protocolo.protocolo_apuesta import (enviar_apuestas,
+                                                recibir_apuestas)
+from common.protocolo.protocolo_respuesta import enviar_respuesta
 from common.serializacion.serializacion_apuesta import apuestas_a_string
+from common.utils import Bet, has_won, load_bets, store_bets
 
 
 class Server:
@@ -37,15 +38,15 @@ class Server:
 
         try:
             socket_agencias = self.aceptar_agencias(cantidad_agencias)
-            self.almacenar_apuestas_agencias(socket_agencias)
-            self.declarar_ganadores(socket_agencias)
+            self.almacenar_apuestas_por_agencia(socket_agencias)
+            self.responder_ganadores_por_agencia(socket_agencias)
         except OSError as e:
             if self.senial_sigterm_recibida:
-                logging.info("action: finish | result: success | finish by sigterm")
+                logging.info("action: finalizacion | result: success | termino por sigterm")
             else:
-                logging.error(f"action: finish | result: fail | error: {e}")
+                logging.error(f"action: finalizacion | result: fail | error: {e}")
 
-    def almacenar_apuestas_agencias(self, socket_agencias: List[socket.socket]):
+    def almacenar_apuestas_por_agencia(self, socket_agencias: List[socket.socket]):
         for socket_agencia in socket_agencias:
             self.almacenar_apuestas(socket_agencia)
 
@@ -53,7 +54,7 @@ class Server:
         while True:
             apuestas, cantidad_errores = recibir_apuestas(client_sock)
             if len(apuestas) == 0:
-                logging.info("action: bet length is zero | result: success")
+                logging.info("action: apuesta_vacia | result: success | termina procesamiento de batches")
                 break
 
             store_bets(apuestas)
@@ -97,17 +98,20 @@ class Server:
             for apuesta in apuestas
             if apuesta.agency == agencia and has_won(apuesta)
         ]
-
-    def declarar_ganadores(self, socket_agencias: List[socket.socket]):
+    
+    def responder_ganadores_por_agencia(self, socket_agencias: List[socket.socket]):
         for socket in socket_agencias:
-            apuestas = load_bets()
-            agencia = recibir_agencia(socket)
-            logging.info(
-                f"action: recibir_agencias | result: success | agencia: {agencia}"
-            )
-            ganadores = self.filtrar_ganadores(agencia, apuestas)
-            logging.info(f"action: ganadores | result: success | ganadoras: {apuestas_a_string(ganadores)}")
-            enviar_apuestas(socket, ganadores)
-            logging.info(
-                f"action: apuestas_enviadas | result: success | apuestas: {len(ganadores)}"
-            )
+            self.responder_ganadores(socket)
+
+    def responder_ganadores(self, socket: socket.socket):
+        apuestas = load_bets()
+        agencia = recibir_agencia(socket)
+        logging.info(
+            f"action: recibir_agencias | result: success | agencia: {agencia}"
+        )
+        ganadores = self.filtrar_ganadores(agencia, apuestas)
+        logging.info(f"action: ganadores | result: success | ganadoras: {apuestas_a_string(ganadores)}")
+        enviar_apuestas(socket, ganadores)
+        logging.info(
+            f"action: apuestas_enviadas | result: success | apuestas: {len(ganadores)}"
+        )
