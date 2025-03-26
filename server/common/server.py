@@ -41,7 +41,7 @@ class Server:
             self.responder_ganadores_por_agencia(socket_agencias)
         except OSError as e:
             if self.senial_sigterm_recibida:
-                logging.info("action: finalizacion | result: success | termino por sigterm")
+                logging.info("action: finalizacion | result: success | mensaje: termino por sigterm")
             else:
                 logging.error(f"action: finalizacion | result: fail | error: {e}")
 
@@ -53,7 +53,7 @@ class Server:
         while True:
             apuestas, cantidad_errores = recibir_apuestas(client_sock)
             if len(apuestas) == 0:
-                logging.info("action: apuesta_vacia | result: success | termina procesamiento de batches")
+                logging.info("action: apuesta_vacia | result: success | mensaje: termina procesamiento de batches")
                 break
 
             store_bets(apuestas)
