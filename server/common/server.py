@@ -8,7 +8,6 @@ from common.protocolo.protocolo_agencia import recibir_agencia
 from common.protocolo.protocolo_apuesta import (enviar_apuestas,
                                                 recibir_apuestas)
 from common.protocolo.protocolo_respuesta import enviar_respuesta
-from common.serializacion.serializacion_apuesta import apuestas_a_string
 from common.utils import Bet, has_won, load_bets, store_bets
 
 
