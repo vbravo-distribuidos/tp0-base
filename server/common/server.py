@@ -110,7 +110,6 @@ class Server:
             f"action: recibir_agencias | result: success | agencia: {agencia}"
         )
         ganadores = self.filtrar_ganadores(agencia, apuestas)
-        logging.info(f"action: ganadores | result: success | ganadoras: {apuestas_a_string(ganadores)}")
         enviar_apuestas(socket, ganadores)
         logging.info(
             f"action: apuestas_enviadas | result: success | apuestas: {len(ganadores)}"
