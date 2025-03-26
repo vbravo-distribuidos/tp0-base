@@ -21,8 +21,16 @@ class GeneradorDockerCompose:
         plantilla_nuevo_cliente["container_name"] = f"client{cliente}"
         plantilla_nuevo_cliente["environment"][0] = f"CLI_ID={cliente}"
         return plantilla_nuevo_cliente
+    
+    def generar_servidor(self, cantidad_clientes: int):
+        plantilla_servidor = self.plantilla["services"]["server"]
+        plantilla_nuevo_servidor = copy.deepcopy(plantilla_servidor)
+        plantilla_nuevo_servidor["environment"][0] = f"CANTIDAD_CLIENTES={cantidad_clientes}"
+        return plantilla_nuevo_servidor
 
     def generar(self):
+        self.plantilla["services"]["server"] = self.generar_servidor(self.clientes)
+
         if self.clientes == 0:
             self.plantilla["services"].pop("client1")
             return 

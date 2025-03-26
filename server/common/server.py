@@ -12,9 +12,9 @@ from common.utils import Bet, has_won, load_bets, store_bets
 
 
 class Server:
-    def __init__(self, port, listen_backlog):
+    def __init__(self, port, listen_backlog, cantidad_clientes: int):
         # Initialize server socket
-        self.listen_backlog = listen_backlog
+        self.cantidad_clientes = cantidad_clientes
         self.senial_sigterm_recibida = False
         signal.signal(signal.SIGTERM, self.salir_elegantemente)
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -36,7 +36,7 @@ class Server:
         """
 
         try:
-            socket_agencias = self.aceptar_agencias(self.listen_backlog)
+            socket_agencias = self.aceptar_agencias(self.cantidad_clientes)
             self.almacenar_apuestas_por_agencia(socket_agencias)
             self.responder_ganadores_por_agencia(socket_agencias)
         except OSError as e:
