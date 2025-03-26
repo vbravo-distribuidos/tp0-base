@@ -15,6 +15,7 @@ from common.utils import Bet, has_won, load_bets, store_bets
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
+        self.listen_backlog = listen_backlog
         self.senial_sigterm_recibida = False
         signal.signal(signal.SIGTERM, self.salir_elegantemente)
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -34,10 +35,9 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-        cantidad_agencias = 5
 
         try:
-            socket_agencias = self.aceptar_agencias(cantidad_agencias)
+            socket_agencias = self.aceptar_agencias(self.listen_backlog)
             self.almacenar_apuestas_por_agencia(socket_agencias)
             self.responder_ganadores_por_agencia(socket_agencias)
         except OSError as e:
