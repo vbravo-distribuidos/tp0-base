@@ -434,3 +434,17 @@ El servido carga las apuestas y filtra por los ganadores del cliente.
 Finalmente, se las envia en un único paquete.
 
 ![alt text](tp0-ej7.drawio-1.png)
+
+### Ejercicio 8
+
+Utilizamos la biblioteca `multiprocessing` para lograr paralelismo y concurrencia. Dentro de ella, los objetos utilizados son 
+- `Pool`: Para tener una cantidad de hasta N procesos corriendo, uno para cada agencia
+- `Lock`: Para lograr exclusión mutea entre agencias a la hora de guardar las apuestas 
+
+El flujo consiste en 
+
+1. Se aceptan N agencias y un `Pool` de capacidad N
+2. Se llama a la función `almacenar_apuestas()` en cada proceso del Pool y se encarga de recibir las apuestas y su guardarlas. Toma el `Lock` durante la persistencia.   
+3. Se espera a que termine el almacenamiento de las apuestas
+4. Se llama a la función `responder_ganadores()` en cada proceso que se ocupa de recibir el ID de cada agencia, filtrar sus apuestas y enviar sus ganadoras
+5. Finaliza 
