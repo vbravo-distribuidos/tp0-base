@@ -403,3 +403,24 @@ Servidor (Una vez aceptado un cliente)
 
 
 ![alt text](imgs/ej5.drawio.png)
+
+### Ejercicio 6
+
+Para resolver el temma de los batches, se actualiza el protocolo de envio de apuestas.    
+Adicional al anterior, una apuesta con sus campos separados por coma, ahora se agregan varias apuestas separadas por salto de linea (\n). 
+
+En otras palabras, cada chunk es similar a tomar N lineas del archivo CSV de origen.
+
+```csv
+Santiago Lionel,Lorca,30904465,1999-03-17,2201
+Agustin Emanuel,Zambrano,21689196,2000-05-10,9325
+Tiago Nicolás,Rivera,34407251,2001-08-29,1033
+```
+
+Respecto al orden de mensajes, las apuestas se envian como
+1. Cliente envia un chunk K 
+2. Servidor recibe el chunk y devuelve OK si no hubo errores
+
+Así hasta no tener más chunks y se envía un chunk de apuestas vacio que le indica al servidor que llegó al final.
+
+![alt text](tp0-ej6.drawio-1.png)

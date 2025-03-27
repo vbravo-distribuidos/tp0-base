@@ -8,3 +8,4 @@ bin/
 .qodo
 
 .data/agency*
+.data/dataset/*
