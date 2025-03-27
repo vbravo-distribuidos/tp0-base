@@ -424,3 +424,13 @@ Respecto al orden de mensajes, las apuestas se envian como
 Así hasta no tener más chunks y se envía un chunk de apuestas vacio que le indica al servidor que llegó al final.
 
 ![alt text](tp0-ej6.drawio-1.png)
+
+### Ejercicio 7
+
+Tras finalizar el envio de apuestas, el cliente consulta por sus ganadores enviando su ID al servidor. 
+
+El servido carga las apuestas y filtra por los ganadores del cliente.
+
+Finalmente, se las envia en un único paquete.
+
+![alt text](tp0-ej7.drawio-1.png)
