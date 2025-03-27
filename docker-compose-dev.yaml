@@ -21,11 +21,41 @@ services:
     - source: ./.data/
       target: /.data/
       type: bind
+  client2:
+    container_name: client2
+    depends_on:
+    - server
+    entrypoint: /client
+    environment:
+    - CLI_ID=2
+    image: client:latest
+    networks:
+    - testing_net
+    volumes:
+    - ./client/config.yaml:/config.yaml
+    - source: ./.data/
+      target: /.data/
+      type: bind
+  client3:
+    container_name: client3
+    depends_on:
+    - server
+    entrypoint: /client
+    environment:
+    - CLI_ID=3
+    image: client:latest
+    networks:
+    - testing_net
+    volumes:
+    - ./client/config.yaml:/config.yaml
+    - source: ./.data/
+      target: /.data/
+      type: bind
   server:
     container_name: server
     entrypoint: python3 /main.py
     environment:
-    - CANTIDAD_CLIENTES=1
+    - CANTIDAD_CLIENTES=3
     - PYTHONUNBUFFERED=1
     image: server:latest
     networks:

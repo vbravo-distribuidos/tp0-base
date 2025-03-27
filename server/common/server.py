@@ -1,10 +1,13 @@
 import logging
+from multiprocessing import Manager, Pool
 import signal
 import socket
 from typing import List
+import traceback
 
 from common.concurso import (
     almacenar_apuestas_por_agencia,
+    cerrar_conexiones,
     responder_ganadores_por_agencia,
 )
 
@@ -22,7 +25,7 @@ class Server:
     def salir_elegantemente(self, signum, frame):
         self.senial_sigterm_recibida = True
         self._server_socket.close()
-        logging.info("action: signal_received | result: success")
+        logging.info(f"action: sigterm_signal_received | result: success ")
 
     def run(self):
         """
@@ -34,17 +37,24 @@ class Server:
         """
 
         try:
-            socket_agencias = self.aceptar_agencias(self.cantidad_clientes)
-            almacenar_apuestas_por_agencia(socket_agencias, self.cantidad_clientes)
-            logging.info("action: sorteo | result: success")
-            responder_ganadores_por_agencia(socket_agencias, self.cantidad_clientes)
+            with Manager() as manager:
+                lock = manager.Lock()
+                with Pool(processes=self.cantidad_clientes) as pool:
+                    socket_agencias = self.aceptar_agencias(self.cantidad_clientes)
+                    almacenar_apuestas_por_agencia(socket_agencias, lock, pool)
+                    logging.info("action: sorteo | result: success")
+                    responder_ganadores_por_agencia(socket_agencias, pool)
+            cerrar_conexiones(socket_agencias)
         except OSError as e:
             if self.senial_sigterm_recibida:
                 logging.info(
-                    "action: finalizacion | result: success | mensaje: termino por sigterm"
+                    "action: excepcion | result: success | mensaje: termino por sigterm"
                 )
             else:
-                logging.error(f"action: finalizacion | result: fail | error: {e}")
+                logging.error(f"action: excepcion | result: fail | error: {e}")
+
+        self._server_socket.close()
+        logging.info("action: finalizacion | result: success")
 
     def __accept_new_connection(self):
         """
